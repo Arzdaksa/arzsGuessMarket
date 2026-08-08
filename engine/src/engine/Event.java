@@ -21,8 +21,8 @@ public class Event {
     @XmlElement(name = "comision")
     private Commission commission;
 
-    @XmlElement(name = "GM-LMSR")
-    private LMSR_Data lmsr_data;
+    @XmlElement(name = "GM-method")
+    private GMMethod method;
 
     //getters
     public String getName() {return name;}
@@ -30,6 +30,19 @@ public class Event {
     public String getDescription() {return description;}
     public List<String> getGM_options() {return GM_options;}
     public Commission getCommission() {return commission;}
+    public LMSR_Data getLmsrData() {return method.getLmsr();}
 
     public Event() {}
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "name='" + name + '\'' +
+                ", ID=" + ID +
+                ", description='" + description + '\'' +
+                ", options=" + GM_options +
+                ", commission=" + commission.getCommission() + " (" + commission.getType() + ")" +
+                ", lmsrB=" + method.getLmsr().getB() +
+                '}';
+    }
 }

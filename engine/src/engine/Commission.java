@@ -1,12 +1,14 @@
 package engine;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlValue;
 
-
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Commission {
 
-    @XmlElement(name = "comision")
+    @XmlValue
     private int commission;
 
     @XmlAttribute(name = "type")
