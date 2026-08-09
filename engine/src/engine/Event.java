@@ -34,15 +34,29 @@ public class Event {
 
     public Event() {}
 
+    public boolean validateCommission(){
+        return this.commission.getCommission() >= 0 && this.commission.getCommission() <= 90;
+    }
+
     @Override
     public String toString() {
-        return "Event{" +
-                "name='" + name + '\'' +
-                ", ID=" + ID +
-                ", description='" + description + '\'' +
-                ", options=" + GM_options +
-                ", commission=" + commission.getCommission() + " (" + commission.getType() + ")" +
-                ", lmsrB=" + method.getLmsr().getB() +
-                '}';
+        return String.format(
+                """
+                _______ Event - (%d) __________
+                | Name: %s
+                | Description: %s
+                | Commission: %d, type: %s
+                | Options: %s
+                | Active status: %s
+                _______________________________
+                """,
+                this.ID,
+                this.name,
+                this.description,
+                this.commission.getCommission(),
+                this.commission.getType(),
+                this.GM_options,
+                "closed" //ask teacher about this *******
+        );
     }
 }

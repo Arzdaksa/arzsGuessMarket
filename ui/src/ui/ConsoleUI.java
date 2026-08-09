@@ -28,11 +28,20 @@ public class ConsoleUI {
                     this.engine.loadDataFromXML(path);
                     break;
                 case "2":
-//                    System.out.println(engine.getAllEventsData());
+                    if (this.engine.isLoaded) this.engine.printAllEvents();
+                    else System.out.println("----- Message -----\n* No data loaded!");
+                    break;
+                case "3":
+                    if (this.engine.isLoaded) {
+                        System.out.println("Please enter Event ID: ");
+                        String eventID = scanner.nextLine();
+
+                    } else System.out.println("----- Message -----\n* No data loaded!");
+
                     break;
                 case "6":
-//                    System.out.println("Exiting Guess Market. Goodbye!");
-//                    isRunning = false;
+                    System.out.println("----- Message -----\n* Exiting Guess Market. Goodbye!");
+                    isRunning = false;
                     break;
                 default:
                     System.out.println("Invalid option. Please try again.");

@@ -11,8 +11,17 @@ public class GuessMarket {
     @XmlElement(name = "GM-event")
     private List<Event> events;
 
-    public Event getEventAt(int index) {
-        return events.get(index);
+    public Event getEventWithID(int searchID) {
+        for  (Event event : events) {
+            if (event.getID() == searchID) {
+                return event;
+            }
+        }
+        return null;
+    }
+
+    public List<Event> getEvents() {
+        return events;
     }
 
     public GuessMarket() {}
