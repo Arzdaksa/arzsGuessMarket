@@ -1,7 +1,10 @@
 package ui;
 
+import engine.Event;
 import engine.GuessMarketEngine;
+import engine.LoadResult;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class ConsoleUI {
@@ -14,48 +17,93 @@ public class ConsoleUI {
     }
 
     public void start() {
+        System.out.println(TerminalRenderer.bannerSplash());
+
         boolean isRunning = true;
+        String warning = null;
 
         while (isRunning) {
-            printMenu();
-            System.out.print("Please enter your choice (1-6): ");
+            System.out.println(TerminalRenderer.mainMenu(engine.isLoaded, engine.getEvents().size(), warning));
+            warning = null;
+            System.out.print(TerminalRenderer.promptArrow("Enter your choice (1-6)"));
             String choice = scanner.nextLine();
 
             switch (choice) {
-                case "1":
-                    System.out.print("Enter full XML file path: ");
-                    String path = scanner.nextLine();
-                    this.engine.loadDataFromXML(path);
-                    break;
-                case "2":
-                    if (this.engine.isLoaded) this.engine.printAllEvents();
-                    else System.out.println("----- Message -----\n* No data loaded!");
-                    break;
-                case "3":
-                    if (this.engine.isLoaded) {
-                        System.out.println("Please enter Event ID: ");
-                        String eventID = scanner.nextLine();
-
-                    } else System.out.println("----- Message -----\n* No data loaded!");
-
-                    break;
-                case "6":
-                    System.out.println("----- Message -----\n* Exiting Guess Market. Goodbye!");
+                case "1" -> handleLoad();
+                case "2" -> handleShowAll();
+                case "3" -> handleShowById();
+                case "6" -> {
+                    System.out.println(TerminalRenderer.exitScreen());
                     isRunning = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+                }
+                default -> warning = "'" + choice + "' is not a valid option. Please choose 1-6.";
             }
         }
     }
 
-    private void printMenu() {
-        System.out.println("\n--- Guess Market Menu ---");
-        System.out.println("1. Load XML file");
-        System.out.println("2. Show all events");
-        System.out.println("3. Show event trade status");
-        System.out.println("4. Participate in event");
-        System.out.println("5. Close event");
-        System.out.println("6. Exit");
+    private void handleLoad() {
+        System.out.println(TerminalRenderer.promptBox("LOAD XML FILE", "Enter full XML file path:"));
+        System.out.print(TerminalRenderer.promptArrow("Path"));
+        String path = scanner.nextLine();
+
+        LoadResult result = engine.loadDataFromXML(path);
+        if (result.success()) {
+            System.out.println(TerminalRenderer.messagePanel(TerminalRenderer.PanelStyle.SUCCESS, List.of(
+                    "File loaded successfully.",
+                    engine.getEvents().size() + " event(s) available. Use option 2 to view them."
+            )));
+        } else {
+            System.out.println(TerminalRenderer.messagePanel(TerminalRenderer.PanelStyle.ERROR, List.of(
+                    result.message(),
+                    "File not loaded."
+            )));
+        }
+    }
+
+    private void handleShowAll() {
+        if (!engine.isLoaded) {
+            printNoDataLoaded();
+            return;
+        }
+        System.out.println(TerminalRenderer.eventsTable(engine.getEvents()));
+    }
+
+    private void handleShowById() {
+        if (!engine.isLoaded) {
+            printNoDataLoaded();
+            return;
+        }
+
+        System.out.println(TerminalRenderer.promptBox("EVENT LOOKUP", "Enter Event ID to inspect:"));
+        System.out.print(TerminalRenderer.promptArrow("Event ID"));
+        String input = scanner.nextLine();
+
+        int id;
+        try {
+            id = Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            System.out.println(TerminalRenderer.messagePanel(TerminalRenderer.PanelStyle.ERROR, List.of(
+                    "'" + input + "' is not a valid numeric ID."
+            )));
+            return;
+        }
+
+        Event event = engine.getEventByID(id);
+        if (event == null) {
+            System.out.println(TerminalRenderer.messagePanel(TerminalRenderer.PanelStyle.ERROR, List.of(
+                    "No event found with ID " + id + ".",
+                    "Use option 2 to see all available event IDs."
+            )));
+        } else {
+            System.out.println(TerminalRenderer.eventDetailCard(event));
+            System.out.println(TerminalRenderer.tradeStatusPanel(event));
+        }
+    }
+
+    private void printNoDataLoaded() {
+        System.out.println(TerminalRenderer.messagePanel(TerminalRenderer.PanelStyle.INFO, List.of(
+                "No data loaded yet.",
+                "Use option 1 to load an XML file first."
+        )));
     }
 }

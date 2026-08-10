@@ -1,7 +1,10 @@
 package engine;
 
 import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Event {
@@ -16,7 +19,7 @@ public class Event {
 
     @XmlElementWrapper(name = "GM-options")
     @XmlElement(name = "GM-option")
-    private List<String> GM_options;
+    private List<Option> GM_options;
 
     @XmlElement(name = "comision")
     private Commission commission;
@@ -28,9 +31,26 @@ public class Event {
     public String getName() {return name;}
     public int getID() {return ID;}
     public String getDescription() {return description;}
-    public List<String> getGM_options() {return GM_options;}
     public Commission getCommission() {return commission;}
     public LMSR_Data getLmsrData() {return method.getLmsr();}
+    public List<String> getGM_options_names() {
+        List<String> result = new ArrayList<>();
+        this.GM_options.forEach((option) -> {result.add(option.getOptionName());});
+        return result;
+    }
+
+    public Map<String, Double> get_options_probabilities() {
+        LMSR_Data lmsr = this.method.getLmsr();
+        double sumEx = lmsr.sumExponentials(this.GM_options);
+
+        Map<String, Double> result = new HashMap<>();
+        for (Option option : this.GM_options) {
+            result.put(option.getOptionName(), lmsr.calc_probability(option, sumEx));
+        }
+
+        return result;
+    }
+
 
     public Event() {}
 
@@ -38,25 +58,7 @@ public class Event {
         return this.commission.getCommission() >= 0 && this.commission.getCommission() <= 90;
     }
 
-    @Override
-    public String toString() {
-        return String.format(
-                """
-                _______ Event - (%d) __________
-                | Name: %s
-                | Description: %s
-                | Commission: %d, type: %s
-                | Options: %s
-                | Active status: %s
-                _______________________________
-                """,
-                this.ID,
-                this.name,
-                this.description,
-                this.commission.getCommission(),
-                this.commission.getType(),
-                this.GM_options,
-                "closed" //ask teacher about this *******
-        );
+    public void setGM_options(List<Option> GM_options) {
+        this.GM_options = GM_options;
     }
 }

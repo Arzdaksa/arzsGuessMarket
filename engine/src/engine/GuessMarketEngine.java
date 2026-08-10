@@ -2,6 +2,7 @@ package engine;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -14,10 +15,19 @@ public class GuessMarketEngine {
 
     private static final String SCHEMA_FILE_NAME = "GM-EX1-Schema.xsd";
 
+    private static final JAXBContext JAXB_CONTEXT;
+    static {
+        try {
+            JAXB_CONTEXT = JAXBContext.newInstance(GuessMarket.class);
+        } catch (JAXBException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
     private GuessMarket loadedEvents;
     public boolean isLoaded = false;
 
-    public void loadDataFromXML(String filePath) {
+    public LoadResult loadDataFromXML(String filePath) {
 
         try {
             File file = new File(filePath);
@@ -26,8 +36,7 @@ public class GuessMarketEngine {
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = schemaFactory.newSchema(schemaFile);
 
-            JAXBContext context = JAXBContext.newInstance(GuessMarket.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
+            Unmarshaller unmarshaller = JAXB_CONTEXT.createUnmarshaller();
             unmarshaller.setSchema(schema);
 
             GuessMarket xmlEvents = (GuessMarket) unmarshaller.unmarshal(file);
@@ -35,17 +44,19 @@ public class GuessMarketEngine {
             loadedEvents = xmlEvents;
             this.isLoaded = true;
 
-            System.out.println("----- Message -----\n* File loaded successfully!");
+            return new LoadResult(true, "File loaded successfully!");
 
         } catch (Exception e) {
-            this.printException(e);
+            return new LoadResult(false, e.getMessage());
         }
     }
 
-    private void printException(Exception e) {
-        System.out.println("----- Message -----");
-        System.out.println("* " + e.getMessage());
-        System.out.println("* File not loaded!");
+    public List<Event> getEvents() {
+        return loadedEvents == null ? List.of() : loadedEvents.getEvents();
+    }
+
+    public Event getEventByID(int id) {
+        return loadedEvents == null ? null : loadedEvents.getEventWithID(id);
     }
 
     private void validateEvents(GuessMarket eventsToValidate) throws Exception {
@@ -62,26 +73,6 @@ public class GuessMarketEngine {
             if (!seenIds.add(event.getID())) {
                 throw new Exception("Duplicate Event ID found: " + event.getID());
             }
-        }
-    }
-
-    public void printAllEvents()
-    {
-        loadedEvents.getEvents().forEach(event -> System.out.println(event.toString()));
-    }
-
-    public void printEventWithID(String eventID)
-    {
-        try {
-            Event target = this.loadedEvents.getEventWithID(Integer.parseInt(eventID));
-            if (target == null) {
-                throw new Exception("Event with ID: " + eventID + " not found!");
-            }
-
-
-        }
-        catch(Exception e) {
-            this.printException(e);
         }
     }
 
