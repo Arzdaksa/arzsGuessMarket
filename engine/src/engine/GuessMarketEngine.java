@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GuessMarketEngine {
 
@@ -55,8 +56,9 @@ public class GuessMarketEngine {
         return loadedEvents == null ? List.of() : loadedEvents.getEvents();
     }
 
-    public Event getEventByID(int id) {
-        return loadedEvents == null ? null : loadedEvents.getEventWithID(id);
+    // events still open for trading
+    public List<Event> getActiveEvents() {
+        return getEvents().stream().filter(event -> !event.isClosed()).collect(Collectors.toList());
     }
 
     private void validateEvents(GuessMarket eventsToValidate) throws Exception {

@@ -26,5 +26,9 @@ public class LMSR_Data {
         return Math.exp((double) target.getOptionQuantity() / b) / sumExponentials;
     }
 
+    public double cost_function(List<Option> options){
+        return this.b * Math.log((double)this.sumExponentials(options));
+    }
+
     public LMSR_Data() {}
 }
