@@ -4,9 +4,12 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
+import java.io.Serializable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Commission {
+public class Commission implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @XmlValue
     private int commission;

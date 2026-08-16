@@ -6,9 +6,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.Serializable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Event {
+public class Event implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @XmlAttribute(name = "name")
     private String name;
 

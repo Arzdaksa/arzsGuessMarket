@@ -4,9 +4,12 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.List;
+import java.io.Serializable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LMSR_Data {
+public class LMSR_Data implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @XmlElement(name = "b")
     private int b;

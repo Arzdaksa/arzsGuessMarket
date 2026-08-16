@@ -32,8 +32,11 @@ public class ConsoleUI {
         menuOptions.put("3", new MenuOption("Show event trade status", this::handleTradeStatus));
         menuOptions.put("4", new MenuOption("Participate in event", this::handleParticipate));
         menuOptions.put("5", new MenuOption("Close event", this::handleCloseEvent));
-        menuOptions.put("6", new MenuOption("Exit", this::handleExit));
+        menuOptions.put("6", new MenuOption("Save system state (Bonus)", this::handleSaveState));
+        menuOptions.put("7", new MenuOption("Load system state (Bonus)", this::handleLoadState));
+        menuOptions.put("8", new MenuOption("Exit", this::handleExit));
     }
+
 
     public void start() {
         System.out.println(MenuRenderer.bannerSplash());
@@ -53,6 +56,39 @@ public class ConsoleUI {
             } else {
                 warning = "'" + choice + "' is not a valid option. Please choose " + keyRange() + ".";
             }
+        }
+    }
+
+    private void handleSaveState() {
+        System.out.println(MenuRenderer.promptBox("SAVE STATE (BONUS)", "Enter full path and file name to save (without extension):"));
+        System.out.print(MenuRenderer.promptArrow("Path"));
+        String path = scanner.nextLine() + ".ser";
+
+        if (engine.saveState(path)) {
+            System.out.println(MenuRenderer.messagePanel(PanelStyle.SUCCESS, List.of(
+                    "State successfully saved to " + path + "."
+            )));
+        } else {
+            System.out.println(MenuRenderer.messagePanel(PanelStyle.ERROR, List.of(
+                    "Failed to save state to " + path + "."
+            )));
+        }
+    }
+
+    private void handleLoadState() {
+        System.out.println(MenuRenderer.promptBox("LOAD STATE (BONUS)", "Enter full path and file name to load (without extension):"));
+        System.out.print(MenuRenderer.promptArrow("Path"));
+        String path = scanner.nextLine() + ".ser";
+
+        if (engine.loadState(path)) {
+            System.out.println(MenuRenderer.messagePanel(PanelStyle.SUCCESS, List.of(
+                    "State successfully loaded from " + path + ".",
+                    engine.getEvents().size() + " event(s) available. Use option 2 to view them."
+            )));
+        } else {
+            System.out.println(MenuRenderer.messagePanel(PanelStyle.ERROR, List.of(
+                    "Failed to load state from " + path + "."
+            )));
         }
     }
 
