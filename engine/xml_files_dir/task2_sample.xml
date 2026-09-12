@@ -4,7 +4,7 @@
         <GM-event name="Election Winner">
             <id>1</id>
             <description>Who wins the election?</description>
-            <comision type="on-purchase">5</comision>
+            <commission type="on-purchase">5</commission>
             <GM-options>
                 <GM-option>YES</GM-option>
                 <GM-option>NO</GM-option>
@@ -18,7 +18,7 @@
         <GM-event name="Rain Tomorrow">
             <id>2</id>
             <description>Will it rain tomorrow?</description>
-            <comision type="on-close">10</comision>
+            <commission type="on-close">10</commission>
             <GM-options>
                 <GM-option>YES</GM-option>
                 <GM-option>NO</GM-option>
@@ -30,7 +30,7 @@
         <GM-event name="Championship Winner">
             <id>3</id>
             <description>Will the home team win the championship?</description>
-            <comision type="on-purchase">2</comision>
+            <commission type="on-purchase">2</commission>
             <GM-options>
                 <GM-option>YES</GM-option>
                 <GM-option>NO</GM-option>

@@ -22,7 +22,7 @@
             <xs:sequence>
                 <xs:element ref="id"/>
                 <xs:element ref="description"/>
-                <xs:element ref="comision"/>
+                <xs:element ref="commission"/>
                 <xs:element ref="GM-options"/>
                 <xs:element ref="GM-method"/>
             </xs:sequence>
@@ -34,7 +34,7 @@
 
     <xs:element name="description" type="xs:string"/>
 
-    <xs:element name="comision">
+    <xs:element name="commission">
         <xs:complexType>
             <xs:simpleContent>
                 <xs:extension base="xs:int">

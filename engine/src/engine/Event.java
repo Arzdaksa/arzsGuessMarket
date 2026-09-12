@@ -26,7 +26,7 @@ public class Event implements Serializable {
     @XmlElement(name = "GM-option")
     private List<Option> options;
 
-    @XmlElement(name = "comision")
+    @XmlElement(name = "commission")
     private Commission commission;
 
     @XmlElement(name = "GM-method")
