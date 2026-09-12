@@ -32,28 +32,15 @@ final class TradeStatusView {
 
     private TradeStatusView() {}
 
-    static VBox buildPicker(ScreenController controller, List<Event> events) {
-        Label title = new Label("Show Event Trade Status");
-        title.getStyleClass().add("content-title");
-        Label subtitle = new Label("Click an event to view its live dashboard.");
-        subtitle.getStyleClass().add("content-subtitle");
-
-        VBox card = card("All Events", EventPickerTable.build(events, controller::showEventDashboard));
-
-        VBox box = new VBox(16, title, subtitle, card);
-        return box;
-    }
-
     static VBox buildDashboard(ScreenController controller, Event event) {
         Button changeEvent = new Button("← Change event");
         changeEvent.getStyleClass().add("link-button");
-        changeEvent.setOnAction(e -> controller.showTradeStatusPicker());
+        changeEvent.setOnAction(e -> controller.showEventsTable());
 
         VBox content = new VBox(16);
         content.getChildren().add(changeEvent);
-        content.getChildren().add(header(event));
+        content.getChildren().add(infoCard(event));
         content.getChildren().add(optionsTable(event));
-        content.getChildren().add(accountPanel(event));
         content.getChildren().add(historyTable(event));
         if (event.isClosed()) {
             content.getChildren().add(closedPanel(event));
@@ -61,7 +48,8 @@ final class TradeStatusView {
         return content;
     }
 
-    private static VBox header(Event event) {
+    // description/commission/LMSR-b + account balance/commission-collected, merged into one card
+    private static VBox infoCard(Event event) {
         List<String[]> rows = new ArrayList<>();
         rows.add(new String[]{"Description", event.getDescription()});
         rows.add(new String[]{"Commission",
@@ -69,6 +57,8 @@ final class TradeStatusView {
         if (event.getLmsrData() != null) {
             rows.add(new String[]{"LMSR liquidity", "b = " + event.getLmsrData().getB()});
         }
+        rows.add(new String[]{"Account balance", String.format("%.2f", event.getAccountBalance())});
+        rows.add(new String[]{"Commission collected", String.format("%.2f", event.getTotalCommissionCollected())});
         return card("Event #" + event.getID() + " · " + event.getName(), fieldValueGrid(rows));
     }
 
@@ -118,13 +108,6 @@ final class TradeStatusView {
         table.getColumns().addAll(nameCol, probCol, valueCol, sharesCol);
 
         return card("Current Values", table);
-    }
-
-    private static VBox accountPanel(Event event) {
-        List<String[]> rows = new ArrayList<>();
-        rows.add(new String[]{"Account balance", String.format("%.2f", event.getAccountBalance())});
-        rows.add(new String[]{"Commission collected", String.format("%.2f", event.getTotalCommissionCollected())});
-        return card("Account", fieldValueGrid(rows));
     }
 
     private static VBox historyTable(Event event) {

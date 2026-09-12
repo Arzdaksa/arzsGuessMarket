@@ -16,6 +16,8 @@ final class UsersListView {
     static VBox build(ScreenController controller, GuessMarketEngine engine) {
         Label title = new Label("Users");
         title.getStyleClass().add("content-title");
+        Label subtitle = new Label("Click a user to see their balance, holdings, and history.");
+        subtitle.getStyleClass().add("content-subtitle");
 
         TableView<User> table = new TableView<>(FXCollections.observableArrayList(engine.getUsers()));
         table.getStyleClass().add("data-table");
@@ -46,6 +48,6 @@ final class UsersListView {
         });
 
         VBox card = TradeStatusView.card("Users (" + engine.getUsers().size() + ")", table);
-        return new VBox(16, title, card);
+        return new VBox(16, title, subtitle, card);
     }
 }

@@ -242,9 +242,35 @@
     -fx-mark-color: #DDE5EE;
 }
 
+/* the closed box's own display cell — reachable as a normal descendant */
 .user-switcher .list-cell {
     -fx-text-fill: #DDE5EE;
     -fx-background-color: transparent;
+}
+
+/* the OPEN dropdown renders in a separate popup window, not a descendant of
+   .user-switcher — JavaFX tags it with .combo-box-popup instead, so it must
+   be styled via that class or it falls back to unstyled (unreadable) cells */
+.combo-box-popup .list-view {
+    -fx-background-color: #16202C;
+    -fx-border-color: #29394D;
+    -fx-border-width: 1;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #16202C;
+    -fx-text-fill: #DDE5EE;
+    -fx-padding: 8 12 8 12;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #29394D;
+    -fx-text-fill: #FFFFFF;
+}
+
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #24405A;
+    -fx-text-fill: #FFFFFF;
 }
 
 .buy-toggle, .sell-toggle {

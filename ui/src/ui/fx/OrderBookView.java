@@ -25,7 +25,7 @@ final class OrderBookView {
     static VBox buildDashboard(ScreenController controller, Event event) {
         Button changeEvent = new Button("← Change event");
         changeEvent.getStyleClass().add("link-button");
-        changeEvent.setOnAction(e -> controller.showTradeStatusPicker());
+        changeEvent.setOnAction(e -> controller.showEventsTable());
 
         VBox content = new VBox(16);
         content.getChildren().add(changeEvent);
@@ -36,9 +36,7 @@ final class OrderBookView {
             content.getChildren().add(TradeStatusView.card("Order Book", new Label("Event has not been opened yet.")));
         } else {
             content.getChildren().add(statsPanel(event, orderBook));
-            for (String optionName : event.getOptionNames()) {
-                content.getChildren().add(bookPanel(optionName, orderBook));
-            }
+            content.getChildren().add(combinedBookPanel(event, orderBook));
             content.getChildren().add(participantsPanel(event, orderBook));
         }
 
@@ -91,17 +89,22 @@ final class OrderBookView {
         return TradeStatusView.card("Live Stats", table);
     }
 
-    private static VBox bookPanel(String optionName, OrderBook orderBook) {
-        TableView<Order> bidsTable = orderTable(orderBook.getBids(optionName));
-        TableView<Order> asksTable = orderTable(orderBook.getAsks(optionName));
+    // both options' bids/asks combined into one card, so the whole book fits in a single glance
+    private static VBox combinedBookPanel(Event event, OrderBook orderBook) {
+        List<Order> allBids = new ArrayList<>();
+        List<Order> allAsks = new ArrayList<>();
+        for (String optionName : event.getOptionNames()) {
+            allBids.addAll(orderBook.getBids(optionName));
+            allAsks.addAll(orderBook.getAsks(optionName));
+        }
 
-        VBox bidsBox = new VBox(6, new Label("Bids"), bidsTable);
-        VBox asksBox = new VBox(6, new Label("Asks"), asksTable);
+        VBox bidsBox = new VBox(6, new Label("Bids"), orderTable(allBids));
+        VBox asksBox = new VBox(6, new Label("Asks"), orderTable(allAsks));
         HBox.setHgrow(bidsBox, Priority.ALWAYS);
         HBox.setHgrow(asksBox, Priority.ALWAYS);
 
         HBox row = new HBox(16, bidsBox, asksBox);
-        return TradeStatusView.card("Order Book — " + optionName, row);
+        return TradeStatusView.card("Order Book", row);
     }
 
     private static TableView<Order> orderTable(List<Order> orders) {
@@ -109,6 +112,9 @@ final class OrderBookView {
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPrefHeight(Math.min(160, 40 + orders.size() * 28));
+
+        TableColumn<Order, String> optionCol = new TableColumn<>("Option");
+        optionCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getOptionName()));
 
         TableColumn<Order, String> ownerCol = new TableColumn<>("Owner");
         ownerCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getOwnerName()));
@@ -119,7 +125,7 @@ final class OrderBookView {
         TableColumn<Order, String> priceCol = new TableColumn<>("Price");
         priceCol.setCellValueFactory(data -> new SimpleStringProperty(String.format("%.2f", data.getValue().getPrice())));
 
-        table.getColumns().addAll(ownerCol, qtyCol, priceCol);
+        table.getColumns().addAll(optionCol, ownerCol, qtyCol, priceCol);
         return table;
     }
 

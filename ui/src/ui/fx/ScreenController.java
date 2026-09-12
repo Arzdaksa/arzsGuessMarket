@@ -68,23 +68,25 @@ final class ScreenController {
         setContent(EventsTableView.build(this, engine));
     }
 
-    void showTradeStatusPicker() {
+    void showTradeChooser() {
         if (!requireLoaded()) return;
-        if (engine.getEvents().isEmpty()) {
-            showInfo("No events", "No events loaded yet.");
-            return;
-        }
-        sidebar.setActive(Sidebar.NavItem.TRADE_STATUS);
-        setContent(TradeStatusView.buildPicker(this, engine.getEvents()));
+        sidebar.setActive(Sidebar.NavItem.TRADE);
+        setContent(TradeChooserView.build(this, engine));
+    }
+
+    void showManageEventChooser() {
+        if (!requireLoaded()) return;
+        sidebar.setActive(Sidebar.NavItem.MANAGE_EVENT);
+        setContent(ManageEventView.build(this, engine));
     }
 
     void showTradeStatusDashboard(Event event) {
-        sidebar.setActive(Sidebar.NavItem.TRADE_STATUS);
+        sidebar.setActive(Sidebar.NavItem.EVENTS);
         setContent(TradeStatusView.buildDashboard(this, event));
     }
 
     void showOrderBookDashboard(Event event) {
-        sidebar.setActive(Sidebar.NavItem.TRADE_STATUS);
+        sidebar.setActive(Sidebar.NavItem.EVENTS);
         setContent(OrderBookView.buildDashboard(this, event));
     }
 
@@ -105,12 +107,12 @@ final class ScreenController {
             showInfo("No active events", "No active LMSR events to trade in.");
             return;
         }
-        sidebar.setActive(Sidebar.NavItem.PARTICIPATE);
+        sidebar.setActive(Sidebar.NavItem.TRADE);
         setContent(ParticipateWizardView.build(this, engine));
     }
 
     void showTradeReceipt(Trade trade, Event event) {
-        sidebar.setActive(Sidebar.NavItem.TRADE_STATUS);
+        sidebar.setActive(Sidebar.NavItem.EVENTS);
         VBox receipt = ParticipateWizardView.buildReceipt(trade);
         VBox dashboard = TradeStatusView.buildDashboard(this, event);
         dashboard.getChildren().add(0, receipt);
@@ -125,12 +127,12 @@ final class ScreenController {
             showInfo("No active events", "No active Order Book events to trade in.");
             return;
         }
-        sidebar.setActive(Sidebar.NavItem.SUBMIT_ORDER);
+        sidebar.setActive(Sidebar.NavItem.TRADE);
         setContent(SubmitOrderWizardView.build(this, engine));
     }
 
     void showOrderReceipt(OrderSubmissionResult result, Event event) {
-        sidebar.setActive(Sidebar.NavItem.TRADE_STATUS);
+        sidebar.setActive(Sidebar.NavItem.EVENTS);
         VBox receipt = SubmitOrderWizardView.buildReceipt(result);
         VBox dashboard = OrderBookView.buildDashboard(this, event);
         dashboard.getChildren().add(0, receipt);
@@ -143,7 +145,7 @@ final class ScreenController {
             showInfo("No inactive events", "There are no inactive events to open.");
             return;
         }
-        sidebar.setActive(Sidebar.NavItem.OPEN_EVENT);
+        sidebar.setActive(Sidebar.NavItem.MANAGE_EVENT);
         setContent(OpenEventWizardView.build(this, engine));
     }
 
@@ -153,7 +155,7 @@ final class ScreenController {
             showInfo("No active events", "No active events to close.");
             return;
         }
-        sidebar.setActive(Sidebar.NavItem.CLOSE_EVENT);
+        sidebar.setActive(Sidebar.NavItem.MANAGE_EVENT);
         setContent(CloseEventWizardView.build(this, engine));
     }
 

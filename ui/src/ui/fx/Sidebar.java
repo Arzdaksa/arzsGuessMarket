@@ -16,16 +16,13 @@ import javafx.scene.layout.VBox;
 // persistent left navigation, built once and never rebuilt on navigation
 final class Sidebar extends VBox {
 
-    enum NavItem { EVENTS, TRADE_STATUS, PARTICIPATE, SUBMIT_ORDER, OPEN_EVENT, CLOSE_EVENT, USERS }
+    enum NavItem { EVENTS, TRADE, MANAGE_EVENT, USERS }
 
     private final Label statusLabel = new Label();
     private final ComboBox<User> userCombo = new ComboBox<>();
     private final Button eventsButton;
-    private final Button tradeStatusButton;
-    private final Button participateButton;
-    private final Button submitOrderButton;
-    private final Button openEventButton;
-    private final Button closeEventButton;
+    private final Button tradeButton;
+    private final Button manageEventButton;
     private final Button usersButton;
 
     Sidebar(ScreenController controller) {
@@ -53,14 +50,11 @@ final class Sidebar extends VBox {
         workflowLabel.getStyleClass().add("sidebar-section-label");
 
         eventsButton = navButton("Show all events", e -> controller.showEventsTable());
-        tradeStatusButton = navButton("Show event trade status", e -> controller.showTradeStatusPicker());
-        participateButton = navButton("Participate in event", e -> controller.showParticipateWizard());
-        submitOrderButton = navButton("Submit order (Order Book)", e -> controller.showSubmitOrderWizard());
+        tradeButton = navButton("Trade", e -> controller.showTradeChooser());
 
         Label mmLabel = new Label("MARKET MAKER");
         mmLabel.getStyleClass().add("sidebar-section-label");
-        openEventButton = navButton("Open event", e -> controller.showOpenEventWizard());
-        closeEventButton = navButton("Close event", e -> controller.showCloseEventWizard());
+        manageEventButton = navButton("Manage my events", e -> controller.showManageEventChooser());
 
         Label accountsLabel = new Label("ACCOUNTS");
         accountsLabel.getStyleClass().add("sidebar-section-label");
@@ -83,26 +77,22 @@ final class Sidebar extends VBox {
         exitButton.getStyleClass().add("nav-button-danger");
 
         getChildren().addAll(header, statusLabel, userLabel, userCombo,
-                workflowLabel, eventsButton, tradeStatusButton, participateButton, submitOrderButton,
-                mmLabel, openEventButton, closeEventButton,
+                workflowLabel, eventsButton, tradeButton,
+                mmLabel, manageEventButton,
                 accountsLabel, usersButton,
                 dataLabel, loadXmlButton, saveStateButton, loadStateButton,
                 spacer, exitButton);
     }
 
     void setActive(NavItem item) {
-        for (Button b : new Button[]{eventsButton, tradeStatusButton, participateButton, submitOrderButton,
-                openEventButton, closeEventButton, usersButton}) {
+        for (Button b : new Button[]{eventsButton, tradeButton, manageEventButton, usersButton}) {
             b.getStyleClass().remove("nav-button-active");
         }
 
         Button active = item == null ? null : switch (item) {
             case EVENTS -> eventsButton;
-            case TRADE_STATUS -> tradeStatusButton;
-            case PARTICIPATE -> participateButton;
-            case SUBMIT_ORDER -> submitOrderButton;
-            case OPEN_EVENT -> openEventButton;
-            case CLOSE_EVENT -> closeEventButton;
+            case TRADE -> tradeButton;
+            case MANAGE_EVENT -> manageEventButton;
             case USERS -> usersButton;
         };
         if (active != null) active.getStyleClass().add("nav-button-active");

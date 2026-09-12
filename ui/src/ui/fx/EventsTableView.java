@@ -25,6 +25,8 @@ final class EventsTableView {
     static VBox build(ScreenController controller, GuessMarketEngine engine) {
         Label title = new Label("All Events");
         title.getStyleClass().add("content-title");
+        Label subtitle = new Label("Browse, filter, and click into any event.");
+        subtitle.getStyleClass().add("content-subtitle");
 
         ObservableList<Event> source = FXCollections.observableArrayList(engine.getEvents());
         FilteredList<Event> filtered = new FilteredList<>(source, e -> true);
@@ -93,7 +95,7 @@ final class EventsTableView {
         VBox card = TradeStatusView.card("Events (" + engine.getEvents().size() + ")",
                 new VBox(14, filtersBox, table));
 
-        return new VBox(16, title, card);
+        return new VBox(16, title, subtitle, card);
     }
 
     private static <T> void toggleSet(Set<T> set, T value, boolean selected, Runnable onChange) {
