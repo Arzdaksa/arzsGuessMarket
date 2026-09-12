@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class ConsoleUI {
+public class ConsoleUI{
     private final GuessMarketEngine engine;
     private final Scanner scanner;
     private final LinkedHashMap<String, MenuOption> menuOptions;
@@ -36,7 +36,6 @@ public class ConsoleUI {
         menuOptions.put("7", new MenuOption("Load system state (Bonus)", this::handleLoadState));
         menuOptions.put("8", new MenuOption("Exit", this::handleExit));
     }
-
 
     public void start() {
         System.out.println(MenuRenderer.bannerSplash());

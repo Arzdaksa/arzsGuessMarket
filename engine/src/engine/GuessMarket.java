@@ -14,8 +14,16 @@ public class GuessMarket implements Serializable {
     @XmlElement(name = "GM-event")
     private List<Event> events;
 
+    @XmlElementWrapper(name = "GM-users")
+    @XmlElement(name = "GM-user")
+    private List<User> users;
+
     public List<Event> getEvents() {
         return events;
+    }
+
+    public List<User> getUsers() {
+        return users == null ? List.of() : users;
     }
 
     public GuessMarket() {}

@@ -13,7 +13,15 @@ public class GMMethod implements Serializable {
     @XmlElement(name = "GM-LMSR")
     private LMSR_Data lmsr;
 
+    @XmlElement(name = "GM-order-book")
+    private OrderBookConfig orderBookConfig;
+
     public LMSR_Data getLmsr() {return lmsr;}
+    public OrderBookConfig getOrderBookConfig() {return orderBookConfig;}
+
+    public MethodType getType() {
+        return lmsr != null ? MethodType.LMSR : MethodType.ORDER_BOOK;
+    }
 
     public GMMethod() {}
 }

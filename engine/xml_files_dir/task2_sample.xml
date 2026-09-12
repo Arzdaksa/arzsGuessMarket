@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Guess-Market xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="GM-EX2-Schema.xsd">
+    <GM-events>
+        <GM-event name="Election Winner">
+            <id>1</id>
+            <description>Who wins the election?</description>
+            <comision type="on-purchase">5</comision>
+            <GM-options>
+                <GM-option>YES</GM-option>
+                <GM-option>NO</GM-option>
+            </GM-options>
+            <GM-method>
+                <GM-LMSR>
+                    <b>100</b>
+                </GM-LMSR>
+            </GM-method>
+        </GM-event>
+        <GM-event name="Rain Tomorrow">
+            <id>2</id>
+            <description>Will it rain tomorrow?</description>
+            <comision type="on-close">10</comision>
+            <GM-options>
+                <GM-option>YES</GM-option>
+                <GM-option>NO</GM-option>
+            </GM-options>
+            <GM-method>
+                <GM-order-book allow-mint="true" initial="20" d="1"/>
+            </GM-method>
+        </GM-event>
+        <GM-event name="Championship Winner">
+            <id>3</id>
+            <description>Will the home team win the championship?</description>
+            <comision type="on-purchase">2</comision>
+            <GM-options>
+                <GM-option>YES</GM-option>
+                <GM-option>NO</GM-option>
+            </GM-options>
+            <GM-method>
+                <GM-order-book allow-mint="false" initial="10" d="1"/>
+            </GM-method>
+        </GM-event>
+    </GM-events>
+    <GM-users>
+        <GM-user name="alice">
+            <initial-cash>1000</initial-cash>
+            <GM-market-maker>
+                <event id="1"/>
+            </GM-market-maker>
+        </GM-user>
+        <GM-user name="bob">
+            <initial-cash>500</initial-cash>
+            <GM-market-maker>
+                <event id="2"/>
+                <event id="3"/>
+            </GM-market-maker>
+        </GM-user>
+        <GM-user name="carol">
+            <initial-cash>300</initial-cash>
+        </GM-user>
+    </GM-users>
+</Guess-Market>

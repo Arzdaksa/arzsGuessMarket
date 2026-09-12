@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.io.Serializable;
@@ -34,8 +35,12 @@ public class Event implements Serializable {
     private final List<Trade> tradeHistory = new ArrayList<>();
     private double accountBalance = 0;
     private double totalCommissionCollected = 0;
-    private boolean closed = false;
     private String winningOption = null;
+
+    @XmlTransient private EventState state = EventState.INACTIVE;
+    @XmlTransient private User marketMaker;
+    @XmlTransient private OrderBook orderBook;
+    @XmlTransient private Map<String, User> userDirectory = Map.of();
 
     //getters
     public String getName() {return name;}
@@ -47,8 +52,16 @@ public class Event implements Serializable {
     public List<Trade> getTradeHistory() {return Collections.unmodifiableList(tradeHistory);}
     public double getAccountBalance() {return accountBalance;}
     public double getTotalCommissionCollected() {return totalCommissionCollected;}
-    public boolean isClosed() {return closed;}
     public String getWinningOption() {return winningOption;}
+
+    public EventState getState() {return state;}
+    public boolean isActive() {return state == EventState.ACTIVE;}
+    public boolean isInactive() {return state == EventState.INACTIVE;}
+    public boolean isClosed() {return state == EventState.CLOSED;}
+    public User getMarketMaker() {return marketMaker;}
+    public MethodType getEventType() {return method.getType();}
+    public OrderBookConfig getOrderBookConfig() {return method.getOrderBookConfig();}
+    public OrderBook getOrderBook() {return orderBook;}
 
     public List<String> getOptionNames() {
         List<String> result = new ArrayList<>();
@@ -84,6 +97,15 @@ public class Event implements Serializable {
         this.options = options;
     }
 
+    // wired once by GuessMarketEngine right after a successful load
+    void setMarketMaker(User marketMaker) {
+        this.marketMaker = marketMaker;
+    }
+
+    void setUserDirectory(Map<String, User> userDirectory) {
+        this.userDirectory = userDirectory;
+    }
+
     private void updateOption(String target, int quantity){
         for (Option option : this.options) {
             if (option.getOptionName().equals(target)) {
@@ -92,31 +114,179 @@ public class Event implements Serializable {
         }
     }
 
-    // prices and records a share purchase against this event; the only path that mutates trade state
-    public Trade executeTrade(String optionName, int quantity) {
-        if (closed) throw new IllegalStateException("Cannot trade in a closed event.");
+    // on-purchase commission for a given notional amount; 0 for on-close events. Shared by LMSR trades and OB fills.
+    double onPurchaseCommission(double notional) {
+        return "on-purchase".equals(commission.getType()) ? notional * commission.getCommission() / 100.0 : 0;
+    }
+
+    void addCommissionCollected(double amount) {
+        totalCommissionCollected += amount;
+    }
+
+    void creditAccountBalance(double amount) {
+        accountBalance += amount;
+    }
+
+    public List<Trade> getTradeHistoryForUser(String userName) {
+        List<Trade> result = new ArrayList<>();
+        for (Trade trade : tradeHistory) {
+            if (trade.buyerName().equals(userName)) result.add(trade);
+        }
+        return result;
+    }
+
+    // --- lifecycle: open / trade / close, all MM- or user-attributed ---
+
+    public boolean canOpen(User requester) {
+        return state == EventState.INACTIVE && requester != null && requester == marketMaker;
+    }
+
+    // LMSR: the zero-share subsidy; Order Book: initial pairs * d
+    public double previewOpenCost() {
+        if (getEventType() == MethodType.LMSR) {
+            return getCurrentCost();
+        }
+        OrderBookConfig config = getOrderBookConfig();
+        return config.getInitial() * (double) config.getD();
+    }
+
+    public void open(User requester) {
+        if (state != EventState.INACTIVE) {
+            throw new IllegalStateException("Event is not inactive.");
+        }
+        if (marketMaker == null || requester != marketMaker) {
+            throw new SecurityException("Only the assigned market maker can open this event.");
+        }
+
+        double cost = previewOpenCost();
+        requester.debit(cost); // throws if insufficient funds; no state mutated on failure
+
+        accountBalance += cost;
+        if (getEventType() == MethodType.ORDER_BOOK) {
+            OrderBookConfig config = getOrderBookConfig();
+            orderBook = new OrderBook(this, config);
+            for (String optionName : getOptionNames()) {
+                orderBook.creditInitialHoldings(requester.getName(), optionName, config.getInitial());
+            }
+        }
+        state = EventState.ACTIVE;
+    }
+
+    // user-aware LMSR purchase; blocks and locks the buyer (via User.debit) if it would go negative
+    public Trade executeTrade(User buyer, String optionName, int quantity) {
+        if (state != EventState.ACTIVE) {
+            throw new IllegalStateException("Event is not active.");
+        }
+        if (buyer.isLocked()) {
+            throw new IllegalStateException("User '" + buyer.getName() + "' is locked and cannot trade.");
+        }
 
         double costBefore = getCurrentCost();
         updateOption(optionName, quantity);
         double costAfter = getCurrentCost();
         double sharesCost = costAfter - costBefore;
+        double commissionPaid = onPurchaseCommission(sharesCost);
 
-        double commissionPaid = 0;
-        if ("on-purchase".equals(commission.getType())) {
-            commissionPaid = sharesCost * commission.getCommission() / 100.0;
+        try {
+            buyer.debit(sharesCost + commissionPaid);
+        } catch (RuntimeException e) {
+            updateOption(optionName, -quantity); // roll back the tentative share purchase
+            throw e;
         }
+
+        accountBalance += sharesCost;
+        if (commissionPaid > 0 && marketMaker != null) {
+            marketMaker.credit(commissionPaid);
+        }
+        totalCommissionCollected += commissionPaid;
+
+        Trade trade = new Trade(buyer.getName(), optionName, quantity, sharesCost, commissionPaid);
+        tradeHistory.add(trade);
+        buyer.markParticipated(ID);
+        return trade;
+    }
+
+    // user-aware close: MM-gated, pays real per-user payouts, sweeps remaining escrow (surplus + any
+    // on-close commission not yet collected) to the MM
+    public void closeEvent(User requester, String winningOptionName) {
+        if (marketMaker == null || requester != marketMaker) {
+            throw new SecurityException("Only the assigned market maker can close this event.");
+        }
+        if (state != EventState.ACTIVE) {
+            throw new IllegalStateException("Event must be active to close.");
+        }
+        if (!getOptionNames().contains(winningOptionName)) {
+            throw new IllegalArgumentException("Unknown option: " + winningOptionName);
+        }
+
+        if (getEventType() == MethodType.LMSR) {
+            payoutLmsrWinners(winningOptionName);
+        } else {
+            payoutOrderBookWinners(winningOptionName);
+        }
+
+        marketMaker.credit(accountBalance);
+        accountBalance = 0;
+        state = EventState.CLOSED;
+        winningOption = winningOptionName;
+    }
+
+    private void payoutLmsrWinners(String winningOptionName) {
+        boolean onClose = "on-close".equals(commission.getType());
+        Map<String, Integer> holderShares = new LinkedHashMap<>();
+        for (Trade trade : tradeHistory) {
+            if (trade.optionName().equals(winningOptionName)) {
+                holderShares.merge(trade.buyerName(), trade.quantity(), Integer::sum);
+            }
+        }
+        for (Map.Entry<String, Integer> entry : holderShares.entrySet()) {
+            double gross = entry.getValue();
+            double commissionAmt = onClose ? gross * commission.getCommission() / 100.0 : 0;
+            double net = gross - commissionAmt;
+            User holder = userDirectory.get(entry.getKey());
+            if (holder != null) holder.credit(net);
+            accountBalance -= net;
+            totalCommissionCollected += commissionAmt;
+        }
+    }
+
+    private void payoutOrderBookWinners(String winningOptionName) {
+        boolean onClose = "on-close".equals(commission.getType());
+        int d = getOrderBookConfig().getD();
+        for (String userName : orderBook.getParticipantNames()) {
+            int shares = orderBook.getHoldings(userName).getOrDefault(winningOptionName, 0);
+            if (shares <= 0) continue;
+            double gross = shares * (double) d;
+            double commissionAmt = onClose ? gross * commission.getCommission() / 100.0 : 0;
+            double net = gross - commissionAmt;
+            User holder = userDirectory.get(userName);
+            if (holder != null) holder.credit(net);
+            accountBalance -= net;
+            totalCommissionCollected += commissionAmt;
+        }
+    }
+
+    // --- LEGACY — retained only so ui.ConsoleUI (dead code, not launched by Main) keeps compiling.
+    // Not reachable in the running app: Main.java never invokes ConsoleUI, and the new schema requires
+    // events to be opened/traded by a real User via the overloads above. Behavior matches Task 1 exactly.
+
+    public Trade executeTrade(String optionName, int quantity) {
+        double costBefore = getCurrentCost();
+        updateOption(optionName, quantity);
+        double costAfter = getCurrentCost();
+        double sharesCost = costAfter - costBefore;
+        double commissionPaid = onPurchaseCommission(sharesCost);
 
         accountBalance += sharesCost + commissionPaid;
         totalCommissionCollected += commissionPaid;
 
-        Trade trade = new Trade(optionName, quantity, sharesCost, commissionPaid);
+        Trade trade = new Trade("legacy", optionName, quantity, sharesCost, commissionPaid);
         tradeHistory.add(trade);
         return trade;
     }
 
-    // closes the event and settles the LMSR payout: $1 per winning share, minus on-close commission
     public void closeEvent(String winningOptionName) {
-        if (closed) throw new IllegalStateException("Event is already closed.");
+        if (state == EventState.CLOSED) throw new IllegalStateException("Event is already closed.");
 
         int winningShares = getOptions().stream()
                 .filter(option -> option.getOptionName().equals(winningOptionName))
@@ -132,7 +302,7 @@ public class Event implements Serializable {
             totalCommissionCollected += commissionOnClose;
         }
 
-        this.closed = true;
+        this.state = EventState.CLOSED;
         this.winningOption = winningOptionName;
     }
 }
