@@ -38,11 +38,13 @@ copy /y "%JAVAFX_LIB%\javafx-base-*.jar" dist\client\lib\javafx\ >nul || goto :f
 copy /y "%JAVAFX_LIB%\javafx-graphics-*.jar" dist\client\lib\javafx\ >nul || goto :fail
 copy /y "%JAVAFX_LIB%\javafx-controls-*.jar" dist\client\lib\javafx\ >nul || goto :fail
 copy /y client\run-client.bat dist\client\ >nul || goto :fail
+copy /y run.bat dist\ >nul || goto :fail
 
 echo.
 echo Done.
 echo   Server: dist\guess-market.war   -^> copy into ^<tomcat^>\webapps
 echo   Client: dist\client\run-client.bat
+echo   Both:   dist\run.bat ^<tomcat folder^>
 exit /b 0
 
 :fail
