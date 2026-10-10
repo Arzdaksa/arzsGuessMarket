@@ -22,7 +22,7 @@ public class GuessMarketApp extends Application {
         serverUrl = initialServerUrl();
 
         scene = new Scene(new StackPane(), 1000, 680);
-        scene.getStylesheets().add(getClass().getResource("theme.css").toExternalForm());
+        scene.getStylesheets().add(GuessMarketApp.class.getResource("theme.css").toExternalForm());
         stage.setScene(scene);
         showLogin(null);
         stage.show();
