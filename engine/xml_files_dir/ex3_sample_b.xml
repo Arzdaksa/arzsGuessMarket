@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Guess-Market>
+    <GM-events>
+        <GM-event name="Championship Winner">
+            <description>Will the home team win the championship?</description>
+            <commission type="on-purchase">2</commission>
+            <GM-options>
+                <GM-option>YES</GM-option>
+                <GM-option>NO</GM-option>
+            </GM-options>
+            <GM-method>
+                <GM-order-book allow-mint="false" initial="10" d="1"/>
+            </GM-method>
+        </GM-event>
+        <GM-event name="Rate Cut">
+            <description>Will the central bank cut rates this quarter?</description>
+            <commission type="on-close">3</commission>
+            <GM-options>
+                <GM-option>YES</GM-option>
+                <GM-option>NO</GM-option>
+            </GM-options>
+            <GM-method>
+                <GM-LMSR>
+                    <b>50</b>
+                </GM-LMSR>
+            </GM-method>
+        </GM-event>
+    </GM-events>
+</Guess-Market>

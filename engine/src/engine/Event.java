@@ -16,8 +16,8 @@ public class Event implements Serializable {
     @XmlAttribute(name = "name")
     private String name;
 
-    @XmlElement(name = "id")
-    private int ID;
+    // assigned by the engine when the event is added; the upload schema carries no id
+    @XmlTransient private int ID;
 
     @XmlElement(name = "description")
     private String description;
@@ -106,7 +106,11 @@ public class Event implements Serializable {
         this.options = options;
     }
 
-    // wired once by GuessMarketEngine right after a successful load
+    void setId(int id) {
+        this.ID = id;
+    }
+
+    // wired once by GuessMarketEngine when the event is added
     void setMarketMaker(User marketMaker) {
         this.marketMaker = marketMaker;
     }
@@ -270,43 +274,5 @@ public class Event implements Serializable {
             accountBalance -= net;
             totalCommissionCollected += commissionAmt;
         }
-    }
-
-    // legacy Task 1 overload, retained only so the unused ConsoleUI keeps compiling
-    public Trade executeTrade(String optionName, int quantity) {
-        double costBefore = getCurrentCost();
-        updateOption(optionName, quantity);
-        double costAfter = getCurrentCost();
-        double sharesCost = costAfter - costBefore;
-        double commissionPaid = onPurchaseCommission(sharesCost);
-
-        accountBalance += sharesCost + commissionPaid;
-        totalCommissionCollected += commissionPaid;
-
-        Trade trade = new Trade("legacy", optionName, quantity, sharesCost, commissionPaid);
-        tradeHistory.add(trade);
-        return trade;
-    }
-
-    // legacy Task 1 overload, retained only so the unused ConsoleUI keeps compiling
-    public void closeEvent(String winningOptionName) {
-        if (state == EventState.CLOSED) throw new IllegalStateException("Event is already closed.");
-
-        int winningShares = getOptions().stream()
-                .filter(option -> option.getOptionName().equals(winningOptionName))
-                .mapToInt(Option::getOptionQuantity)
-                .findFirst().orElse(0);
-
-        double grossPayout = winningShares;
-        accountBalance -= grossPayout;
-
-        if ("on-close".equals(commission.getType())) {
-            double commissionOnClose = grossPayout * commission.getCommission() / 100.0;
-            accountBalance += commissionOnClose;
-            totalCommissionCollected += commissionOnClose;
-        }
-
-        this.state = EventState.CLOSED;
-        this.winningOption = winningOptionName;
     }
 }

@@ -1,3 +1,7 @@
+### Build output (build.bat) ###
+/build/
+/dist/
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
