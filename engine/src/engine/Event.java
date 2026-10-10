@@ -42,7 +42,6 @@ public class Event implements Serializable {
     @XmlTransient private OrderBook orderBook;
     @XmlTransient private Map<String, User> userDirectory = Map.of();
 
-    //getters
     public String getName() {return name;}
     public int getID() {return ID;}
     public String getDescription() {return description;}
@@ -87,6 +86,16 @@ public class Event implements Serializable {
     }
 
     public Event() {
+    }
+
+    // used by GuessMarketEngine.createEvent() to build events outside of XML loading
+    Event(int id, String name, String description, List<Option> options, Commission commission, GMMethod method) {
+        this.ID = id;
+        this.name = name;
+        this.description = description;
+        this.options = options;
+        this.commission = commission;
+        this.method = method;
     }
 
     public boolean validateCommission(){
@@ -135,8 +144,6 @@ public class Event implements Serializable {
         return result;
     }
 
-    // --- lifecycle: open / trade / close, all MM- or user-attributed ---
-
     public boolean canOpen(User requester) {
         return state == EventState.INACTIVE && requester != null && requester == marketMaker;
     }
@@ -159,7 +166,7 @@ public class Event implements Serializable {
         }
 
         double cost = previewOpenCost();
-        requester.debit(cost); // throws if insufficient funds; no state mutated on failure
+        requester.debit(cost);
 
         accountBalance += cost;
         if (getEventType() == MethodType.ORDER_BOOK) {
@@ -190,7 +197,7 @@ public class Event implements Serializable {
         try {
             buyer.debit(sharesCost + commissionPaid);
         } catch (RuntimeException e) {
-            updateOption(optionName, -quantity); // roll back the tentative share purchase
+            updateOption(optionName, -quantity);
             throw e;
         }
 
@@ -206,8 +213,7 @@ public class Event implements Serializable {
         return trade;
     }
 
-    // user-aware close: MM-gated, pays real per-user payouts, sweeps remaining escrow (surplus + any
-    // on-close commission not yet collected) to the MM
+    // user-aware close: MM-gated, pays real per-user payouts, sweeps remaining escrow to the MM
     public void closeEvent(User requester, String winningOptionName) {
         if (marketMaker == null || requester != marketMaker) {
             throw new SecurityException("Only the assigned market maker can close this event.");
@@ -266,10 +272,7 @@ public class Event implements Serializable {
         }
     }
 
-    // --- LEGACY — retained only so ui.ConsoleUI (dead code, not launched by Main) keeps compiling.
-    // Not reachable in the running app: Main.java never invokes ConsoleUI, and the new schema requires
-    // events to be opened/traded by a real User via the overloads above. Behavior matches Task 1 exactly.
-
+    // legacy Task 1 overload, retained only so the unused ConsoleUI keeps compiling
     public Trade executeTrade(String optionName, int quantity) {
         double costBefore = getCurrentCost();
         updateOption(optionName, quantity);
@@ -285,6 +288,7 @@ public class Event implements Serializable {
         return trade;
     }
 
+    // legacy Task 1 overload, retained only so the unused ConsoleUI keeps compiling
     public void closeEvent(String winningOptionName) {
         if (state == EventState.CLOSED) throw new IllegalStateException("Event is already closed.");
 

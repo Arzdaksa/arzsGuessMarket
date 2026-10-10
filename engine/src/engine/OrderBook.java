@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// per-event limit order book: same-option price-time matching plus cross-option auto-minting
 public class OrderBook implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -85,6 +84,7 @@ public class OrderBook implements Serializable {
         addHolding(userName, optionName, quantity);
     }
 
+    // matches against the opposite book and cross-option mint queue, skipping the user's own resting orders to prevent self-trades
     public OrderSubmissionResult submitOrder(User user, String optionName, OrderSide side, int quantity, double price) {
         if (event.getState() != EventState.ACTIVE) {
             throw new IllegalStateException("Event is not active; cannot submit orders.");
@@ -109,16 +109,20 @@ public class OrderBook implements Serializable {
                 throw new IllegalStateException("User '" + user.getName() + "' does not hold enough shares of '"
                         + optionName + "' to sell (" + held + " held, " + quantity + " requested).");
             }
-            addHolding(user.getName(), optionName, -quantity); // reserve immediately
+            addHolding(user.getName(), optionName, -quantity);
         }
 
         Order incoming = new Order(nextOrderId++, user, side, optionName, quantity, price, sequenceCounter++);
         List<OrderBookTrade> newFills = new ArrayList<>();
 
-        // 1. normal same-option matching, price-time priority
         List<Order> opposite = (side == OrderSide.BID) ? asks.get(optionName) : bids.get(optionName);
-        while (incoming.getQuantity() > 0 && !opposite.isEmpty()) {
-            Order best = opposite.get(0);
+        int oppositeIndex = 0;
+        while (incoming.getQuantity() > 0 && oppositeIndex < opposite.size()) {
+            Order best = opposite.get(oppositeIndex);
+            if (best.getOwner() == user) {
+                oppositeIndex++;
+                continue;
+            }
             boolean crosses = (side == OrderSide.BID) ? price >= best.getPrice() : best.getPrice() >= price;
             if (!crosses) break;
 
@@ -131,15 +135,20 @@ public class OrderBook implements Serializable {
 
             incoming.reduceQuantity(matchQty);
             best.reduceQuantity(matchQty);
-            if (best.getQuantity() == 0) opposite.remove(0);
+            if (best.getQuantity() == 0) opposite.remove(oppositeIndex);
+            else oppositeIndex++;
         }
 
-        // 2. auto-mint (BID orders only, cross-option)
         if (side == OrderSide.BID && incoming.getQuantity() > 0 && config.isAllowMint()) {
             String otherOptionName = otherOption(optionName);
             List<Order> otherBids = bids.get(otherOptionName);
-            while (incoming.getQuantity() > 0 && !otherBids.isEmpty()) {
-                Order otherBest = otherBids.get(0);
+            int otherIndex = 0;
+            while (incoming.getQuantity() > 0 && otherIndex < otherBids.size()) {
+                Order otherBest = otherBids.get(otherIndex);
+                if (otherBest.getOwner() == user) {
+                    otherIndex++;
+                    continue;
+                }
                 double combined = price + otherBest.getPrice();
                 if (combined < config.getD()) break;
 
@@ -154,11 +163,11 @@ public class OrderBook implements Serializable {
 
                 incoming.reduceQuantity(mintQty);
                 otherBest.reduceQuantity(mintQty);
-                if (otherBest.getQuantity() == 0) otherBids.remove(0);
+                if (otherBest.getQuantity() == 0) otherBids.remove(otherIndex);
+                else otherIndex++;
             }
         }
 
-        // 3. rest remainder
         int restingQty = incoming.getQuantity();
         if (restingQty > 0) {
             Order resting = new Order(incoming.getId(), user, side, optionName, restingQty, price, incoming.getSequence());
@@ -184,7 +193,6 @@ public class OrderBook implements Serializable {
         }
 
         addHolding(buyer.getName(), optionName, quantity);
-        // seller's holding was already reserved (decremented) at ask-submission time
 
         return new OrderBookTrade(optionName, buyer.getName(), seller.getName(), quantity, fillPrice, commission, false);
     }

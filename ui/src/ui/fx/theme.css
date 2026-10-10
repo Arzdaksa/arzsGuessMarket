@@ -81,6 +81,12 @@
     -fx-background-color: #3A2229;
 }
 
+.sidebar .check-box {
+    -fx-text-fill: #DDE5EE;
+    -fx-font-size: 12px;
+    -fx-padding: 4 20 10 20;
+}
+
 /* ---------- Content area ---------- */
 
 .content-pane {

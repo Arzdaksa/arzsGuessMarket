@@ -24,4 +24,10 @@ public class OrderBookConfig implements Serializable {
     public int getD() {return d;}
 
     public OrderBookConfig() {}
+
+    OrderBookConfig(int initial, int d, boolean allowMint) {
+        this.initial = initial;
+        this.d = d;
+        this.allowMint = allowMint;
+    }
 }

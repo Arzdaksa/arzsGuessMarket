@@ -20,7 +20,6 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.Optional;
 
-// navigation hub: swaps the BorderPane center per screen and owns the file-dialog actions
 final class ScreenController {
 
     private final Stage stage;
@@ -170,6 +169,16 @@ final class ScreenController {
         setContent(UserDetailView.build(this, user));
     }
 
+    void setDynamicEventCreationEnabled(boolean enabled) {
+        engine.dynamicEventCreationEnabled = enabled;
+    }
+
+    void showCreateEventWizard(User marketMaker) {
+        if (!requireLoaded()) return;
+        sidebar.setActive(Sidebar.NavItem.USERS);
+        setContent(CreateEventWizardView.build(this, engine, marketMaker));
+    }
+
     void handleLoadXml() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Load XML file");
@@ -182,10 +191,10 @@ final class ScreenController {
         if (file == null) return;
 
         Task<LoadResult> loadTask = new Task<>() {
+            // includes an artificial delay so the progress bar is visibly demonstrated, per spec
             @Override
             protected LoadResult call() {
                 LoadResult result = engine.loadDataFromXML(file.getAbsolutePath());
-                // artificial delay so the progress bar is visibly demonstrated, per spec
                 for (int i = 0; i <= 20; i++) {
                     updateProgress(i, 20);
                     try {
@@ -274,6 +283,7 @@ final class ScreenController {
         scroll.setFitToWidth(true);
         scroll.getStyleClass().add("content-pane");
         root.setCenter(scroll);
+        sidebar.refreshUserDisplay();
     }
 
     void showInfo(String title, String message) {

@@ -3,7 +3,6 @@ package ui.render;
 import java.util.ArrayList;
 import java.util.List;
 
-// generic, engine-agnostic ASCII box-drawing toolkit shared by every renderer
 public final class Layout {
 
     public static final int WIDTH = 80;
@@ -12,10 +11,7 @@ public final class Layout {
 
     private Layout() {}
 
-    /**
-     * showHeader=true renders a header row followed by one separator, then unseparated data rows
-     * (list style). showHeader=false renders no header but a separator between every row (card style).
-     */
+    // showHeader=true: header row + one separator, then unseparated rows (list style); showHeader=false: a separator between every row instead (card style)
     public static String table(String title, String[] headers, List<String[]> rows, boolean showHeader) {
         int[] colWidths = computeColumnWidths(headers, rows, showHeader);
         int tableWidth = colWidths.length * 3 + 1 + sum(colWidths);

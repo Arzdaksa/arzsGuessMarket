@@ -6,7 +6,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
-// a single "pick this option" card used by the Trade and Manage-Event chooser screens
 final class ChoiceCard {
 
     private ChoiceCard() {}

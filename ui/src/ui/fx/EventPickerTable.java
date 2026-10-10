@@ -10,7 +10,6 @@ import javafx.scene.control.TableView;
 import java.util.List;
 import java.util.function.Consumer;
 
-// shared row-click selection tables used by the trade-status/participate/close-event screens
 final class EventPickerTable {
 
     private EventPickerTable() {}

@@ -8,7 +8,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-// small modal shown while XML loading runs on a background Task
 final class ProgressDialog {
 
     private final Stage stage;

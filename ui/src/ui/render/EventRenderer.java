@@ -5,7 +5,6 @@ import engine.Event;
 import java.util.ArrayList;
 import java.util.List;
 
-// tables and numbered selection lists for events and their options
 public final class EventRenderer {
 
     private EventRenderer() {}

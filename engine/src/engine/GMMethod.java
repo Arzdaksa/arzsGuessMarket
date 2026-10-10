@@ -24,4 +24,12 @@ public class GMMethod implements Serializable {
     }
 
     public GMMethod() {}
+
+    GMMethod(LMSR_Data lmsr) {
+        this.lmsr = lmsr;
+    }
+
+    GMMethod(OrderBookConfig orderBookConfig) {
+        this.orderBookConfig = orderBookConfig;
+    }
 }

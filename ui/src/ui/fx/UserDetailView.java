@@ -38,6 +38,13 @@ final class UserDetailView {
         VBox content = new VBox(16, back, header);
 
         GuessMarketEngine engine = controller.engine;
+        if (engine.dynamicEventCreationEnabled) {
+            Button createEvent = new Button("+ Create Event (Bonus)");
+            createEvent.getStyleClass().add("primary-button");
+            createEvent.setOnAction(e -> controller.showCreateEventWizard(user));
+            content.getChildren().add(createEvent);
+        }
+
         List<Event> participated = engine.getEvents().stream()
                 .filter(e -> user.getParticipatedEventIds().contains(e.getID())
                         || (e.getOrderBook() != null && e.getOrderBook().getParticipantNames().contains(user.getName())))
@@ -105,6 +112,8 @@ final class UserDetailView {
         return box;
     }
 
+    // P/L includes the market maker's initial funding cost, which isn't recorded as a fill
+    // but is a real debit against their balance when they open the event
     private static VBox orderBookBreakdown(Event event, User user) {
         VBox box = new VBox(10);
         if (event.getOrderBook() == null) {
@@ -115,15 +124,21 @@ final class UserDetailView {
         Map<String, Integer> holdings = event.getOrderBook().getHoldings(user.getName());
         box.getChildren().add(new Label("Holdings: " + (holdings.isEmpty() ? "none" : holdings.toString())));
 
-        double amountPaid = 0;
+        double tradingAmountPaid = 0;
         double commissionPaid = 0;
         for (OrderBookTrade fill : event.getOrderBook().getFills()) {
             if (fill.buyerName().equals(user.getName())) {
-                amountPaid += fill.notional();
+                tradingAmountPaid += fill.notional();
                 commissionPaid += fill.commission();
             }
         }
-        box.getChildren().add(new Label("Amount paid (trading activity): " + String.format("%.2f", amountPaid)));
+        double openingCost = (user == event.getMarketMaker()) ? event.previewOpenCost() : 0;
+        double amountPaid = tradingAmountPaid + openingCost;
+
+        box.getChildren().add(new Label("Amount paid (trading activity): " + String.format("%.2f", tradingAmountPaid)));
+        if (openingCost > 0) {
+            box.getChildren().add(new Label("Market opening cost (as market maker): " + String.format("%.2f", openingCost)));
+        }
         box.getChildren().add(new Label("Commission paid: " + String.format("%.2f", commissionPaid)));
 
         if (event.isClosed()) {

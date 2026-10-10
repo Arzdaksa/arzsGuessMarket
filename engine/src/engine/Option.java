@@ -27,4 +27,8 @@ public class Option implements Serializable {
     public Option() {
     }
 
+    Option(String optionName) {
+        this.optionName = optionName;
+    }
+
 }

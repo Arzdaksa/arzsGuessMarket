@@ -2,7 +2,6 @@ package engine;
 
 import java.io.Serializable;
 
-// a resting (or just-matched) limit order in an OrderBook
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -11,7 +10,7 @@ public class Order implements Serializable {
     private final User owner;
     private final OrderSide side;
     private final String optionName;
-    private int quantity; // remaining unfilled
+    private int quantity;
     private final double price;
     private final long sequence;
 

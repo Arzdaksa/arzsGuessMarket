@@ -10,7 +10,6 @@ import java.util.Map;
 
 import static ui.render.Layout.*;
 
-// the option-3 trade-status dashboard, plus the option-4 purchase receipt that shares its vocabulary
 public final class TradeStatusRenderer {
 
     private static final int PROBABILITY_BAR_WIDTH = 30;

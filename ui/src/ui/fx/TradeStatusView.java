@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-// event picker for "show event trade status" + the read-only dashboard shared with participate/close
 final class TradeStatusView {
 
     private TradeStatusView() {}

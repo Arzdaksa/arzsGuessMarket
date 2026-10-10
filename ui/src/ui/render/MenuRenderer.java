@@ -6,7 +6,6 @@ import java.util.Map;
 
 import static ui.render.Layout.*;
 
-// splash/exit screens, the main menu, and general-purpose prompt/message panels
 public final class MenuRenderer {
 
     public enum PanelStyle { SUCCESS, ERROR, INFO }

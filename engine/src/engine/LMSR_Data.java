@@ -17,6 +17,7 @@ public class LMSR_Data implements Serializable {
     public int getB() {return b;}
     public void setB(int b) {this.b = b;}
 
+    // LMSR term: sum of exp(quantity / b) across all options
     public double sumExponentials(List<Option> options) {
         double sum = 0;
         for (Option option : options) {
@@ -25,10 +26,12 @@ public class LMSR_Data implements Serializable {
         return sum;
     }
 
+    // LMSR softmax probability of one option given the market's sum of exponentials
     public double calc_probability(Option target, double sumExponentials) {
         return Math.exp((double) target.getOptionQuantity() / b) / sumExponentials;
     }
 
+    // LMSR cost function: b * ln(sum of exponentials)
     public double cost_function(List<Option> options){
         return this.b * Math.log((double)this.sumExponentials(options));
     }

@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -53,7 +54,9 @@ final class EventsTableView {
                 toggle("On-purchase", true, sel -> toggleSet(selectedCommissionTypes, "on-purchase", sel, refreshPredicate)),
                 toggle("On-close", true, sel -> toggleSet(selectedCommissionTypes, "on-close", sel, refreshPredicate)));
 
-        TableView<Event> table = new TableView<>(filtered);
+        SortedList<Event> sorted = new SortedList<>(filtered);
+        TableView<Event> table = new TableView<>(sorted);
+        sorted.comparatorProperty().bind(table.comparatorProperty());
         table.getStyleClass().add("data-table");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPrefHeight(Math.min(420, 60 + engine.getEvents().size() * 32));

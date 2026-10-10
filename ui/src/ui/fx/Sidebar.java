@@ -7,13 +7,13 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-// persistent left navigation, built once and never rebuilt on navigation
 final class Sidebar extends VBox {
 
     enum NavItem { EVENTS, TRADE, MANAGE_EVENT, USERS }
@@ -70,6 +70,11 @@ final class Sidebar extends VBox {
         Button loadStateButton = navButton("Load system state (Bonus)", e -> controller.handleLoadState());
         loadStateButton.getStyleClass().add("nav-button-secondary");
 
+        Label bonusLabel = new Label("BONUS");
+        bonusLabel.getStyleClass().add("sidebar-section-label");
+        CheckBox createEventToggle = new CheckBox("Enable Create Event");
+        createEventToggle.selectedProperty().addListener((obs, old, val) -> controller.setDynamicEventCreationEnabled(val));
+
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
@@ -81,6 +86,7 @@ final class Sidebar extends VBox {
                 mmLabel, manageEventButton,
                 accountsLabel, usersButton,
                 dataLabel, loadXmlButton, saveStateButton, loadStateButton,
+                bonusLabel, createEventToggle,
                 spacer, exitButton);
     }
 
@@ -108,6 +114,16 @@ final class Sidebar extends VBox {
     void refreshUsers(GuessMarketEngine engine) {
         userCombo.setItems(FXCollections.observableArrayList(engine.getUsers()));
         userCombo.setValue(null);
+    }
+
+    // re-renders the combo's displayed text for the current selection; User isn't observable,
+    // so balance changes from trades don't repaint the "Name — $Balance" label on their own
+    void refreshUserDisplay() {
+        User selected = userCombo.getValue();
+        if (selected != null) {
+            userCombo.setValue(null);
+            userCombo.setValue(selected);
+        }
     }
 
     private static Button navButton(String label, EventHandler<ActionEvent> action) {
