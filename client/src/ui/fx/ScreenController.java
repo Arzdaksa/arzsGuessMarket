@@ -332,8 +332,10 @@ final class ScreenController {
         }
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files", "*.xml"));
         File file = chooser.showOpenDialog(stage);
-        if (file == null) return;
+        if (file != null) uploadXml(file);
+    }
 
+    void uploadXml(File file) {
         ProgressDialog dialog = new ProgressDialog(stage, "Uploading market data…");
         dialog.show();
         this.<UploadResultDto>submit("Upload XML file", () -> client.uploadXml(file.toPath()), result -> {
